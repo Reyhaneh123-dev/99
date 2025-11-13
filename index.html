@@ -1,51 +1,36 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>نمایشگاه مجموعه‌ها — خوش‌آمد</title>
-  <style>
-    :root{
-      --bg1:#0f62fe; --bg2:#00b4d8; --card:#ffffffcc;
-      --accent:#ffdd57; --muted:#eef6ff;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-      font-family: Tahoma, "IRANSans", sans-serif; background: linear-gradient(135deg,var(--bg1),var(--bg2));
-      color:#012;
-    }
-    .wrap{width:min(980px,96vw); background:linear-gradient(180deg,#ffffff10,#ffffff05); padding:28px; border-radius:16px; box-shadow:0 12px 40px rgba(0,0,0,0.2); text-align:center;}
-    h1{color:white; margin:0 0 10px; font-size:1.9rem}
-    p.lead{color:#eaf6ff; opacity:.95}
-    .logo{width:120px;height:120px;margin:18px auto;border-radius:50%;background:radial-gradient(circle at 30% 30%, #fff8, transparent 40%), linear-gradient(135deg,#fff0,#0000);display:grid;place-items:center; font-weight:700; color:#012;}
-    .dots{display:flex;gap:8px;justify-content:center;margin-top:14px}
-    .dot{width:12px;height:12px;border-radius:50%;background:#fff3;box-shadow:0 3px 8px #0006;animation:float 1.6s ease-in-out infinite;}
-    .dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
-    @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
-    .btns{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
-    .btn{background:#fff;color:var(--bg1);border-radius:10px;padding:10px 14px;text-decoration:none;font-weight:600;box-shadow:0 6px 20px rgba(2,2,2,0.08)}
-    .mini{background:transparent;border:1px solid #ffffff33;color:#fff;padding:8px 10px;border-radius:8px}
-    footer{margin-top:14px;color:#eaf6ff; font-size:13px}
-    @media (max-width:560px){ .wrap{padding:16px} h1{font-size:1.4rem} .logo{width:96px;height:96px} }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نمایشگاه مجموعه‌ها</title>
+<style>
+  body { font-family:'Tahoma',sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background:linear-gradient(135deg,#007bff,#00b4d8); color:white; flex-direction:column; overflow:hidden;}
+  h1{font-size:2.5rem; margin-bottom:20px;}
+  .loader {border:6px solid rgba(255,255,255,0.3); border-top:6px solid white; border-radius:50%; width:60px; height:60px; animation:spin 1s linear infinite;}
+  @keyframes spin {0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+  #userForm{display:flex; flex-direction:column; align-items:center; margin-top:20px;}
+  input{margin:5px; padding:8px 12px; font-size:16px; border-radius:6px; border:none;}
+  button{padding:8px 16px; border-radius:6px; border:none; background:#1565c0; color:white; font-size:16px; cursor:pointer; margin-top:10px;}
+</style>
 </head>
 <body>
-  <div class="wrap" role="main">
-    <div class="logo" aria-hidden="true">نمایشگاه<br>مجموعه‌ها</div>
-    <h1>خوش آمدی به نمایشگاه مجموعه‌ها</h1>
-    <p class="lead">آموزش تعاملی مجموعه‌ها — نمودار ون، محورهای عددی، تعریف خودکار شرط‌های فارسی به نماد ریاضی و تمرین‌های جذاب</p>
-
-    <div class="dots" aria-hidden="true">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    </div>
-
-    <div class="btns">
-      <a class="btn" href="sets.html">شروع: تعریف مجموعه A</a>
-      <a class="btn mini" href="operations.html">رفتن به عملیات (مستقیم)</a>
-    </div>
-
-    <footer>نسخهٔ نمایشی — طراحی شده برای پایهٔ نهم تا سطح نمایشگاهی</footer>
+  <h1>در حال بارگذاری نمایشگاه مجموعه‌ها...</h1>
+  <div class="loader"></div>
+  <div id="userForm">
+    <input id="firstName" placeholder="نام" type="text">
+    <input id="lastName" placeholder="نام خانوادگی" type="text">
+    <button onclick="saveUser()">تایید و ورود</button>
   </div>
+
+<script>
+function saveUser() {
+  const f=document.getElementById("firstName").value.trim();
+  const l=document.getElementById("lastName").value.trim();
+  if(!f||!l){alert("لطفاً نام و نام خانوادگی را وارد کنید"); return;}
+  localStorage.setItem("userName",f+" "+l);
+  window.location.href="sets.html";
+}
+</script>
 </body>
 </html>

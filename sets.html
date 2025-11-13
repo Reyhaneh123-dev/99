@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>تعریف مجموعه A — نمایشگاه مجموعه‌ها</title>
+  <style>
+    :root{--primary:#0d47a1; --accent:#1976d2; --card:#fff; --muted:#6b7280}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Tahoma, IRANSans, sans-serif;background:#f4fbff;color:#042;}
+    header{padding:18px 20px;background:linear-gradient(90deg,var(--accent),#00b4d8);color:#fff;display:flex;align-items:center;justify-content:space-between}
+    header h1{font-size:1.1rem;margin:0}
+    main{max-width:980px;margin:18px auto;padding:18px}
+    .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 8px 22px rgba(10,10,10,0.06);margin-bottom:14px}
+    label{display:block;margin:8px 0;font-weight:600}
+    select,input,button{font-size:15px;padding:8px;border-radius:8px;border:1px solid #d6e8ff}
+    button{background:var(--accent);color:#fff;border:none;cursor:pointer}
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .math-ltr{direction:ltr;font-family:monospace;background:#f3f9ff;padding:8px;border-radius:8px;display:inline-block}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    /* Venn animation styles */
+    .venn-scene{display:flex;align-items:center;justify-content:center;height:240px}
+    .morph-line{width:260px;height:6px;background:var(--accent);border-radius:4px;transition:all .9s ease}
+    .morph-circle{width:260px;height:260px;border-radius:50%;border:3px solid var(--accent);background:rgba(25,118,210,0.06);display:grid;place-items:center;opacity:0;transform:scale(.4);transition:all .9s ease}
+    .morph-circle.show{opacity:1;transform:scale(1)}
+    .venn-numbers{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:200px;opacity:0;transform:translateY(12px);transition:all .6s ease}
+    .venn-numbers.show{opacity:1;transform:translateY(0)}
+    .small{font-size:13px;color:var(--muted)}
+    /* axis */
+    svg.axis{width:100%;height:160px;overflow:visible}
+    .note{font-size:13px;color:#444;margin-top:8px}
+    /* quiz */
+    .quiz{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .chip{padding:6px 10px;border-radius:999px;border:1px solid #e6eefc;background:#fff;cursor:pointer}
+    .success{background:#e6ffef;border-color:#9ae6b4}
+    @media (max-width:640px){ .venn-scene{height:180px} .morph-circle{width:200px;height:200px} }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>تعریف مجموعه A</h1>
+    <div style="font-size:13px">نمایشگاه مجموعه‌ها — مرحلهٔ تعریف</div>
+  </header>
+
+  <main>
+    <div class="card">
+      <label>عضو کدام مجموعه شناخته‌شده است؟</label>
+      <div class="row">
+        <select id="knownSet">
+          <option value="">انتخاب کنید...</option>
+          <option value="N">N (اعداد طبیعی)</option>
+          <option value="W">W (اعداد شمارشی)</option>
+          <option value="Z">Z (اعداد صحیح)</option>
+          <option value="Q">Q (اعداد گویا)</option>
+          <option value="I">اعداد گنگ</option>
+          <option value="R">R (اعداد حقیقی)</option>
+        </select>
+
+        <div style="flex:1">
+          <label>شرط را به زبان ساده یا فارسی بنویس (مثلاً: x کوچکتر مساوی 4 یا -2 ≤ x ≤ 4 یا 1,2,3)</label>
+          <input id="textCondition" placeholder="مثلاً: x کوچکتر مساوی 4 یا -2 ≤ x ≤ 4 یا 1,2,3" style="width:100%"/>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnConvert">تبدیل به نماد ریاضی و ذخیره</button>
+        <button id="btnShowMembers">نمایش اعضا</button>
+        <button id="btnVenn">نمایش ون (انیمیشن)</button>
+        <button id="btnAxis">نمایش محور</button>
+        <button id="btnClear" style="background:#777">پاک کردن</button>
+      </div>
+
+      <div id="mathResult" class="card" style="margin-top:12px"></div>
+      <div id="membersBox" class="card" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card">
+      <label>پیش‌نمایش نمودار ون (انیمیشنی)</label>
+      <div class="venn-scene card" id="vennScene" style="flex-direction:column">
+        <div id="morphContainer" style="display:grid;place-items:center;width:100%">
+          <div id="line" class="morph-line" aria-hidden="true"></div>
+          <div id="circle" class="morph-circle" aria-hidden="true">
+            <div id="vnums" class="venn-numbers"></div>
+          </div>
+        </div>
+      </div>
+      <div id="vennNote" class="small">برای مجموعه‌های نامتناهی (مثل R، Q، I) ون به‌صورت محدود نمایش داده نمی‌شود.</div>
+    </div>
+
+    <div class="card">
+      <label>پیش‌نمایش محور عددی</label>
+      <div id="axisBox" class="card"></div>
+      <div class="note">نکته: اعداد گنگ و گویا روی نقاط منفرد نمایش داده نمی‌شوند؛ برای بازه‌های حقیقی، خط پیوسته و هاشور بین انتها نمایش داده می‌شود.</div>
+    </div>
+
+    <div class="card">
+      <label>حالت تمرین / آزمون</label>
+      <div class="row quiz">
+        <div>حدس بزن مجموعهٔ داده‌شده چیست؟</div>
+        <div id="quizTarget" class="chip" style="font-weight:700;background:#fff8;border:1px dashed #cfe">...</div>
+        <div style="margin-left:auto">
+          <button id="btnNewQuiz" style="background:#0b74a8">مثال جدید</button>
+        </div>
+      </div>
+      <div style="margin-top:10px" id="quizChoices"></div>
+    </div>
+
+  </main>
+
+  <script>
+    // === Persian (colloquial) to math-symbol converter ===
+    // This maps various Persian phrases to math symbols and normalizes intervals
+    function persianToMath(input) {
+      if(!input) return "";
+      let s = input.trim();
+
+      // normalize Arabic/Persian numerals to Latin digits
+      const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+      const latinDigits = "0123456789";
+      s = s.replace(/[۰-۹]/g, ch => latinDigits[persianDigits.indexOf(ch)]);
+      // common phrase replacements (order matters)
+      const replacements = [
+        [/\b(کوچکتر مساوی|کوچکتر از یا مساوی|کمتر یا مساوی|کمتر مساوی|≤|<=)\b/gi, "≤"],
+        [/\b(بزرگتر مساوی|بزرگتر از یا مساوی|بیشتر یا مساوی|بیشتر مساوی|≥|>=)\b/gi, "≥"],
+        [/\b(کوچکتر از|کوچکتر|کمتر از|کمتر)\b/gi, "<"],
+        [/\b(بزرگتر از|بزرگتر|بیشتر از|بیشتر)\b/gi, ">"],
+        [/\b(مساوی با|مساوی|=|برابر با)\b/gi, "="],
+        [/\b(نامساوی|≠|!=|<>)\b/gi, "≠"],
+        [/\b(و|و همچنین|و؟)\b/gi, "∧"],
+        [/\b(یا|یا اینکه)\b/gi, "∨"],
+        // interval words
+        [/[؟،]/g, ","], // punctuation convert
+      ];
+      replacements.forEach(([repl, sub]) => { s = s.replace(repl, sub); });
+
+      // transform text like "x ≤ 4" or "−2 ≤ x ≤ 4" or "[-2,4]"
+      // try to detect interval patterns
+      let interval = null;
+      const bracket = s.match(/[\[\(]\s*(-?\d+(\.\d+)?)\s*[,–]\s*(-?\d+(\.\d+)?)\s*[\]\)]/);
+      if(bracket){
+        const leftInc = s.includes('[') || s.includes('≤');
+        const rightInc = s.includes(']') || s.includes('≤');
+        interval = {a:Number(bracket[1]), b:Number(bracket[3]), leftInc, rightInc};
+      } else {
+        // pattern like "-2 ≤ x ≤ 4" or "-2 < x < 4"
+        const pattern = s.match(/(-?\d+(\.\d+)?)\s*(≤|<|>)\s*x\s*(≤|<|>)\s*(-?\d+(\.\d+)?)/);
+        if(pattern){
+          interval = {a:Number(pattern[1]), b:Number(pattern[5]), leftInc: pattern[3]==='≤', rightInc: pattern[4]==='≤'};
+        }
+      }
+
+      // if there's an 'x' relation, make it canonical { x ∈ Set | condition }
+      // but we'll leave set symbol out here; caller can wrap with chosen set symbol
+      if(!interval){
+        // also convert phrases like "1,2,3" or "{1,2,3}" keep as is
+        s = s.replace(/\s+/g, ' ').trim();
+        return s;
+      } else {
+        const leftSym = interval.leftInc ? '≤' : '<';
+        const rightSym = interval.rightInc ? '≤' : '<';
+        return `${interval.a} ${leftSym} x ${rightSym} ${interval.b}`;
+      }
+    }
+
+    // === UI hooks ===
+    const knownSet = document.getElementById('knownSet');
+    const textCondition = document.getElementById('textCondition');
+    const btnConvert = document.getElementById('btnConvert');
+    const mathResult = document.getElementById('mathResult');
+    const membersBox = document.getElementById('membersBox');
+    const btnVenn = document.getElementById('btnVenn');
+    const btnAxis = document.getElementById('btnAxis');
+    const btnShowMembers = document.getElementById('btnShowMembers');
+    const btnClear = document.getElementById('btnClear');
+
+    btnConvert.addEventListener('click', ()=>{
+      const set = knownSet.value || '?';
+      const raw = textCondition.value.trim();
+      if(!set){ alert('لطفاً ابتدا مجموعهٔ شناخته‌شده را انتخاب کن'); return; }
+      if(!raw){ alert('لطفاً شرط را وارد کن'); return; }
+      const cond = persianToMath(raw);
+      const expr = `{ x ∈ ${set} | ${cond} }`;
+      mathResult.innerHTML = `<div style="font-weight:700">نمایش ریاضی</div><div class="math-ltr" dir="ltr">${expr}</div>`;
+      // save
+      localStorage.setItem('setA_expr', expr);
+      localStorage.setItem('setA_set', set);
+      localStorage.setItem('setA_cond_raw', raw);
+      // hint
+      membersBox.innerHTML = `<div class="small">✅ نمایش ذخیره شد — می‌توانید به صفحهٔ عملیات بروید.</div>`;
+    });
+
+    btnShowMembers.addEventListener('click', ()=>{
+      const set = knownSet.value;
+      if(!set){ membersBox.innerHTML = 'لطفاً مجموعه را انتخاب کنید.'; return; }
+      if(set==='R' || set==='I' || set==='Q'){
+        membersBox.innerHTML = 'نمایش فهرست اعضا برای مجموعه‌های بی‌نهایت (R, Q, I) ممکن نیست.';
+        return;
+      }
+      if(set==='N') membersBox.innerText = '{1, 2, 3, 4, …}';
+      if(set==='W') membersBox.innerText = '{0, 1, 2, 3, …}';
+      if(set==='Z') membersBox.innerText = '{…, -2, -1, 0, 1, 2, …}';
+    });
+
+    // Venn animation: line -> circle + show numbers (if finite)
+    function playVenn(){
+      const set = knownSet.value;
+      const raw = textCondition.value.trim();
+      const line = document.getElementById('line');
+      const circle = document.getElementById('circle');
+      const vnums = document.getElementById('vnums');
+      vnums.innerHTML = '';
+
+      // cannot show finite list for infinite sets
+      if(set==='R' || set==='I' || set==='Q'){ document.getElementById('vennNote').innerText = 'نمایش ون برای مجموعه‌های بی‌نهایت محدود نیست.'; return; }
+      document.getElementById('vennNote').innerText = 'ون انیمیشنی — اعضا داخل دایره نمایش داده می‌شوند.';
+
+      // try to extract explicit numbers from raw
+      const nums = (raw.match(/-?\d+(\.\d+)?/g) || []).slice(0,8);
+      const display = nums.length ? nums : ['1','2','3'];
+      display.forEach(n=> {
+        const span = document.createElement('div');
+        span.textContent = n;
+        span.style.padding='6px 8px';
+        span.style.borderRadius='8px';
+        span.style.background='#fff';
+        span.style.fontWeight='700';
+        span.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)';
+        vnums.appendChild(span);
+      });
+
+      // animate: shrink line then show circle
+      line.style.opacity = '1';
+      line.style.transform = 'scaleX(1)';
+      circle.classList.remove('show');
+      vnums.classList.remove('show');
+
+      // timeline
+      setTimeout(()=>{ line.style.transform='scaleX(.04)'; line.style.transition='transform .6s ease'; }, 120);
+      setTimeout(()=>{ line.style.opacity='0'; }, 760);
+      setTimeout(()=>{ circle.classList.add('show'); }, 860);
+      setTimeout(()=>{ vnums.classList.add('show'); }, 1200);
+    }
+
+    btnVenn.addEventListener('click', playVenn);
+
+    // Axis rendering (SVG)
+    const axisBox = document.getElementById('axisBox');
+
+    function renderAxisForInterval(a,b,leftInc,rightInc){
+      // compute ticks from Math.ceil(a)-1 to Math.floor(b)+1
+      const min = Math.floor(a)-1, max = Math.ceil(b)+1;
+      const width = 760, offset=20;
+      const range = max-min;
+      function toX(v){ return offset + ((v-min)/range)*(width-2*offset); }
+      const xA = toX(a), xB = toX(b);
+      const ticks = [];
+      for(let t=min; t<=max; t++) ticks.push(`<line x1="${toX(t)}" x2="${toX(t)}" y1="-6" y2="6" stroke="#222"/><text x="${toX(t)}" y="22" text-anchor="middle" font-size="12">${t}</text>`);
+      const leftCircle = leftInc ? `<circle cx="${xA}" cy="0" r="5" fill="#1976d2"/>` : `<circle cx="${xA}" cy="0" r="6" fill="#fff" stroke="#1976d2" stroke-width="2"/>`;
+      const rightCircle = rightInc ? `<circle cx="${xB}" cy="0" r="5" fill="#1976d2"/>` : `<circle cx="${xB}" cy="0" r="6" fill="#fff" stroke="#1976d2" stroke-width="2"/>`;
+      return `
+        <div style="padding:8px">
+          <svg class="axis" viewBox="0 0 800 140" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <pattern id="hach" width="6" height="6" patternTransform="rotate(45)">
+                <path d="M0 6 L6 0" stroke="#1976d2" stroke-width="1" />
+              </pattern>
+              <marker id="arr" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                <path d="M0,0 L10,5 L0,10 z" fill="#222"/>
+              </marker>
+            </defs>
+            <g transform="translate(0,70)">
+              <line x1="${offset}" x2="${width-offset}" y1="0" y2="0" stroke="#222" stroke-width="2" marker-start="url(#arr)" marker-end="url(#arr)"/>
+              ${ticks.join('')}
+              <rect x="${xA}" y="-18" width="${xB-xA}" height="36" fill="url(#hach)" opacity="0.3"></rect>
+              ${leftCircle}
+              ${rightCircle}
+              <text x="${toX(min)}" y="-24" font-size="11" text-anchor="middle" fill="#666">${min}</text>
+              <text x="${toX(max)}" y="-24" font-size="11" text-anchor="middle" fill="#666">${max}</text>
+            </g>
+          </svg>
+          <div style="margin-top:6px;font-size:13px;color:#333">نمایش بازه: ${a} تا ${b} — ${leftInc? 'شامل': 'شامل نیست'} ${a} ، ${rightInc? 'شامل': 'شامل نیست'} ${b}</div>
+        </div>`;
+    }
+
+    function renderDiscreteAxis(min,max,arr){
+      const width = 760, offset=20; const range = max-min;
+      const toX = (v)=> offset + ((v-min)/range)*(width-2*offset);
+      let ticks = '';
+      for(let t=min; t<=max; t++) ticks += `<line x1="${toX(t)}" x2="${toX(t)}" y1="-6" y2="6" stroke="#222"/><text x="${toX(t)}" y="22" text-anchor="middle" font-size="12">${t}</text>`;
+      const circles = arr.map(v=> `<circle cx="${toX(v)}" cy="0" r="5" fill="#1976d2"/>`).join('');
+      return `
+        <div style="padding:8px">
+          <svg class="axis" viewBox="0 0 800 140"><g transform="translate(0,70)">
+          <line x1="${offset}" x2="${width-offset}" y1="0" y2="0" stroke="#222" stroke-width="2"/>
+          ${ticks}
+          ${circles}
+          </g></svg>
+          <div style="margin-top:6px;font-size:13px;color:#333">نقاط نشان‌دهندهٔ اعضای مجموعهٔ محدود.</div>
+        </div>`;
+    }
+
+    btnAxis.addEventListener('click', ()=>{
+      const set = knownSet.value;
+      const raw = textCondition.value.trim();
+      axisBox.innerHTML = '';
+      if(!set){ axisBox.innerText = 'لطفاً مجموعه را انتخاب کنید.'; return; }
+      if(set==='I' || set==='Q'){ axisBox.innerText = 'اعداد گنگ یا گویا به صورت نقطه‌گذاری منفرد نمایش داده نمی‌شوند.'; return; }
+      // try to parse interval
+      const bracket = raw.match(/[\[\(]\s*(-?\d+(\.\d+)?)\s*[,–]\s*(-?\d+(\.\d+)?)\s*[\]\)]/);
+      if(bracket){
+        const leftInc = raw.includes('[') || raw.includes('≤') || raw.includes('<=');
+        const rightInc = raw.includes(']') || raw.includes('≤') || raw.includes('>=');
+        axisBox.innerHTML = renderAxisForInterval(Number(bracket[1]), Number(bracket[3]), leftInc, rightInc);
+        return;
+      }
+      // pattern like -2 ≤ x ≤ 4
+      const pat = raw.match(/(-?\d+(\.\d+)?)\s*(≤|<)\s*x\s*(≤|<)\s*(-?\d+(\.\d+)?)/);
+      if(pat){
+        const a = Number(pat[1]); const b = Number(pat[5]);
+        const leftInc = pat[3]==='≤'; const rightInc = pat[4]==='≤';
+        axisBox.innerHTML = renderAxisForInterval(a,b,leftInc,rightInc);
+        return;
+      }
+      // discrete list
+      const nums = (raw.match(/-?\d+(\.\d+)?/g)||[]).map(Number);
+      if(nums.length){
+        const min = Math.min(...nums)-1, max = Math.max(...nums)+1;
+        axisBox.innerHTML = renderDiscreteAxis(min,max,nums);
+        return;
+      }
+      axisBox.innerText = 'نتوانستم محور را بر اساس ورودی رسم کنم. مثال بازه: -2 ≤ x ≤ 4 یا اعضا: 1,2,3';
+    });
+
+    btnClear.addEventListener('click', ()=>{
+      knownSet.value=''; textCondition.value=''; mathResult.innerHTML=''; membersBox.innerHTML=''; axisBox.innerHTML=''; localStorage.removeItem('setA_expr');
+    });
+
+    // === QUIZ: guess which known set for a sample ===
+    const quizTarget = document.getElementById('quizTarget');
+    const quizChoices = document.getElementById('quizChoices');
+    const btnNewQuiz = document.getElementById('btnNewQuiz');
+    const samples = [
+      {label:'{2,4,6,8,...}', ans:'N', hint:'اعداد زوج متناهی از ۲ شروع؟ در N قرار می‌گیرد.'},
+      {label:'{0,1,2,3,...}', ans:'W', hint:'شمارشی با ۰ آغاز → W'},
+      {label:'{-3,-2,-1,0,1,2,3}', ans:'Z', hint:'اعداد شامل منفی و مثبت → Z'},
+      {label:'{1/2, 2/3, 3/4, ...}', ans:'Q', hint:'به صورت کسری — اعداد گویا → Q'},
+    ];
+    function newQuiz(){
+      const s = samples[Math.floor(Math.random()*samples.length)];
+      quizTarget.textContent = s.label;
+      quizChoices.innerHTML = '';
+      ['N','W','Z','Q','R','I'].forEach(k=> {
+        const btn = document.createElement('button');
+        btn.className='chip';
+        btn.textContent = k;
+        btn.onclick = ()=>{
+          if(k===s.ans){ btn.classList.add('success'); setTimeout(()=>alert('آفرین! درست زدین.\n'+s.hint),80); }
+          else{ btn.style.borderColor='#f8c'; alert('نه، این انتخاب درستی نیست. دوباره تلاش کن'); }
+        };
+        quizChoices.appendChild(btn);
+      });
+    }
+    btnNewQuiz.addEventListener('click', newQuiz);
+    // init one
+    newQuiz();
+  </script>
+</body>
+</html>
